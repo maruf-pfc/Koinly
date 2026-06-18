@@ -6597,11 +6597,10 @@ class _CloudSyncScreenState extends State<CloudSyncScreen> {
   }
 
   Future<void> _syncNow() async {
-    await _saveSettings(showStatus: false);
-    final state = context.read<AppController>();
-    await state.syncToCloud(force: true);
-    if (!mounted) return;
-    await _showSyncResult('Online sync completed.');
+    // The main Sync button intentionally uses the same flow as
+    // "Download cloud data to this device" so both buttons restore
+    // the latest approved cloud snapshot onto this phone.
+    await _downloadNow();
   }
 
   Future<void> _uploadNow() async {
