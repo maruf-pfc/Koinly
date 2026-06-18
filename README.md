@@ -625,12 +625,6 @@ This is expected for the current CI workflow. Configure a release keystore befor
 - Backup files are local files; online sync stores full JSON snapshots in the Turso `sync_snapshots` table.
 - Placeholder legal text is present inside the app and should be replaced before production release.
 
-## Release signing note
-
-The current Android release configuration signs release APKs with the debug signing config so GitHub Actions can produce a directly installable APK without extra secrets.
-
-Before publishing to Google Play or another public app store, replace the debug signing config with a real release keystore and keep keystore passwords outside the repository.
-
 ## License
 
 This project includes an Apache License 2.0 license file. See [`LICENSE`](LICENSE) for the full license text.
