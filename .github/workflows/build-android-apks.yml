@@ -1,0 +1,108 @@
+name: Build Android APKs
+
+on:
+  workflow_dispatch:
+    inputs:
+      sync_api_base_url:
+        description: "Cloudflare Worker URL for online sync, for example https://koinly-sync.yourname.workers.dev"
+        required: false
+        type: string
+  push:
+    branches:
+      - main
+      - master
+    paths:
+      - "lib/**"
+      - "android/**"
+      - "assets/**"
+      - "pubspec.yaml"
+      - "pubspec.lock"
+      - ".github/workflows/build-android-apks.yml"
+
+jobs:
+  build-apks:
+    name: Build ARM32, ARM64, and universal APKs
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android SDK 36 and NDK 28
+        run: |
+          yes | sdkmanager --licenses || true
+          sdkmanager "platforms;android-36" "build-tools;36.0.0" "ndk;28.2.13676358"
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Force Gradle wrapper 8.14.1
+        run: |
+          mkdir -p android/gradle/wrapper
+          cat > android/gradle/wrapper/gradle-wrapper.properties <<'EOF'
+          distributionBase=GRADLE_USER_HOME
+          distributionPath=wrapper/dists
+          zipStoreBase=GRADLE_USER_HOME
+          zipStorePath=wrapper/dists
+          distributionUrl=https\://services.gradle.org/distributions/gradle-8.14.1-bin.zip
+          EOF
+
+      - name: Show Flutter version
+        run: flutter --version
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Prepare artifact folder
+        run: mkdir -p artifacts
+
+      - name: Build universal release APK
+        env:
+          KOINLY_SYNC_API_BASE_URL: ${{ github.event.inputs.sync_api_base_url || vars.KOINLY_SYNC_API_BASE_URL || secrets.KOINLY_SYNC_API_BASE_URL }}
+        run: |
+          if [ -z "$KOINLY_SYNC_API_BASE_URL" ]; then
+            echo "::warning::KOINLY_SYNC_API_BASE_URL is empty. The APKs will build, but online sync will show a backend URL configuration error until you rebuild with the Worker URL."
+          fi
+          flutter build apk \
+            --release \
+            --target-platform android-arm,android-arm64 \
+            --no-tree-shake-icons \
+            --dart-define=KOINLY_SYNC_API_BASE_URL="$KOINLY_SYNC_API_BASE_URL"
+          cp build/app/outputs/flutter-apk/app-release.apk artifacts/koinly-universal-release.apk
+
+      - name: Build ARM32 and ARM64 split APKs
+        env:
+          KOINLY_SYNC_API_BASE_URL: ${{ github.event.inputs.sync_api_base_url || vars.KOINLY_SYNC_API_BASE_URL || secrets.KOINLY_SYNC_API_BASE_URL }}
+        run: |
+          flutter build apk \
+            --release \
+            --split-per-abi \
+            --target-platform android-arm,android-arm64 \
+            --no-tree-shake-icons \
+            --dart-define=KOINLY_SYNC_API_BASE_URL="$KOINLY_SYNC_API_BASE_URL"
+          cp build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk artifacts/koinly-armeabi-v7a-release.apk
+          cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk artifacts/koinly-arm64-v8a-release.apk
+
+      - name: List APK artifacts
+        run: ls -lh artifacts
+
+      - name: Upload release APKs
+        uses: actions/upload-artifact@v4
+        with:
+          name: koinly-release-apks
+          path: artifacts/*.apk
+          if-no-files-found: error
