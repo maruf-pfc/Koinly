@@ -40,8 +40,6 @@ A local-first personal finance tracker built in Flutter with a polished Material
 
 ## README sync note
 
-This README was rebuilt by comparing the current Koinly version with the uploaded `Koinly-main.zip`.
-
 Kept from the uploaded version where still accurate:
 - clean project status section
 - feature grouping
@@ -66,53 +64,6 @@ Corrected from the older README:
 - Old compact home summary wording was not kept as a current feature.
 - Old download-cloud wording was replaced with current Download Data behavior.
 - Outdated sync provider wording was replaced with the current MongoDB-visible flow.
-
----
-
-## Latest changes
-
-### Version 1.0.67+68
-
-- refreshed README against uploaded `Koinly-main.zip`
-- documented the current Android and Windows workflow
-- documented Financial Health Summary period-end popup behavior
-- documented daily 10 Savings Account suggestions
-- documented current sync behavior
-- preserved app icon, signing support, GitHub Actions, and installer workflow
-
-### Version 1.0.66+67
-
-- Savings Accounts page now uses 10 daily suggestions.
-- Suggestion bubbles show as mystery `?` bubbles before tapping.
-- Checked suggestions are saved for the day.
-- After all 10 are checked, suggestions stop until the next day.
-
-### Version 1.0.65+66
-
-- fixed nullable date handling in Analysis chart data.
-- all-time ranges and empty transaction history now use safe chart ranges.
-
-### Version 1.0.64+65
-
-- removed Financial Health Summary from the Analysis page.
-- moved monthly and yearly summaries into end-of-period popup flows.
-- users can review pages or skip all.
-- skipped/reviewed summaries are remembered.
-
-### Version 1.0.62+63 to 1.0.63+64
-
-- added monthly/yearly Financial Health Summary calculations.
-- included income, expense, savings, loans, bills, reminders, and budgets.
-- added yearly month-by-month breakdown and comparison logic.
-- fixed a Dart `num` to `double` chart build failure.
-
-### Version 1.0.60+61 to 1.0.61+62
-
-- removed the extra Savings Accounts tune/filter button.
-- changed savings suggestions so they appear randomly instead of always showing.
-- changed Categories Expense/Income into one toggle button.
-- changed Loans Given/Taken into one toggle button.
-- changed Loans Open/Completed into one toggle button.
 
 ---
 
