@@ -48,7 +48,7 @@ const Color kSleekWarning = Color(0xFFF59E0B);
 const Color kSleekMuted = Color(0xFF7C8A92);
 
 const appTitle = 'Koinly';
-const appVersion = '1.0.67';
+const appVersion = '1.0.70';
 const backupPassword = 'YOUR_SECRET_PASSWORD';
 const kSyncAdminTelegramUrl = 'https://t.me/Ch0wdhury_Siam';
 
@@ -3192,12 +3192,7 @@ class KoinlyScrollBehavior extends MaterialScrollBehavior {
 
   @override
   Widget buildScrollbar(BuildContext context, Widget child, ScrollableDetails details) {
-    if (!kIsDesktopApp) return child;
-    return Scrollbar(
-      controller: details.controller,
-      interactive: true,
-      child: child,
-    );
+    return child;
   }
 }
 
@@ -11709,8 +11704,8 @@ class _CloudSyncScreenState extends State<CloudSyncScreen> {
   }
 
   Future<void> _syncNow() async {
-    // Sync uploads this device's local data to the configured cloud target.
-    await _uploadNow();
+    // Sync downloads the latest database/cloud data to this device.
+    await _downloadNow();
   }
 
   Future<void> _uploadNow() async {
@@ -11727,11 +11722,11 @@ class _CloudSyncScreenState extends State<CloudSyncScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Download Data?'),
-        content: const Text('This replaces the local SQLite data on this device with the data saved under this Sync ID.'),
+        title: const Text('Sync from Database?'),
+        content: const Text('This downloads/restores the latest database data and replaces the local SQLite data on this device.'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Download')),
+          FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Sync')),
         ],
       ),
     );
@@ -11740,7 +11735,7 @@ class _CloudSyncScreenState extends State<CloudSyncScreen> {
     final state = context.read<AppController>();
     await state.syncMainOnlineFromCloud();
     if (!mounted) return;
-    await _showSyncResult('Cloud data downloaded.');
+    await _showSyncResult('Database data downloaded to this device.');
   }
 
   Future<void> _showSyncResult(String successMessage) async {
@@ -11852,13 +11847,13 @@ class _CloudSyncScreenState extends State<CloudSyncScreen> {
             ),
             const SizedBox(height: 10),
             OutlinedButton.icon(
-              onPressed: state.cloudSyncBusy || state.syncDatabaseProvider == SyncDatabaseProvider.local ? null : _downloadNow,
-              icon: const Icon(Icons.cloud_download_rounded),
-              label: const Text('Download Data'),
+              onPressed: state.cloudSyncBusy || state.syncDatabaseProvider == SyncDatabaseProvider.local ? null : _uploadNow,
+              icon: const Icon(Icons.cloud_upload_rounded),
+              label: const Text('Upload Data'),
             ),
             const SizedBox(height: 14),
             Text(
-              'Important: Sync uploads this device’s local data. Download Data replaces this device’s local data with the latest cloud data. Automatic sync runs after local changes once a database method is configured. Conflict handling is last-upload-wins.',
+              'Important: Sync downloads/restores the latest database data to this device. Upload Data uploads this device’s local data to the configured database. Automatic sync still runs after local changes once a database method is configured. Conflict handling is last-upload-wins.',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(color: kSleekMuted, fontWeight: FontWeight.w700),
             ),
           ],
@@ -12045,8 +12040,8 @@ class _SyncDatabaseProviderConfigScreenState extends State<SyncDatabaseProviderC
   }
 
   Future<void> _syncNow() async {
-    // Sync uploads this device's local data to the selected database provider.
-    await _uploadNow();
+    // Sync downloads the latest data from the selected database provider.
+    await _downloadNow();
   }
 
   Future<void> _uploadNow() async {
@@ -12061,13 +12056,13 @@ class _SyncDatabaseProviderConfigScreenState extends State<SyncDatabaseProviderC
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Download Data?'),
+        title: const Text('Sync from Database?'),
         content: Text(_provider == SyncDatabaseProvider.mongoDb
-            ? 'This replaces this device’s local data with the latest snapshot from your MongoDB database.'
-            : 'This replaces this device’s local data with the latest cloud snapshot for the current Sync ID.'),
+            ? 'This downloads/restores the latest snapshot from your MongoDB database and replaces this device’s local data.'
+            : 'This downloads/restores the latest snapshot from the selected database/cloud provider and replaces this device’s local data.'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Download')),
+          FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Sync')),
         ],
       ),
     );
@@ -12076,7 +12071,7 @@ class _SyncDatabaseProviderConfigScreenState extends State<SyncDatabaseProviderC
     final state = context.read<AppController>();
     await state.syncFromCloud();
     if (!mounted) return;
-    await _showSyncResult('Cloud data downloaded.');
+    await _showSyncResult('Database data downloaded to this device.');
   }
 
   Future<void> _showSyncResult(String successMessage) async {
@@ -12179,7 +12174,7 @@ class _SyncDatabaseProviderConfigScreenState extends State<SyncDatabaseProviderC
               provider: _provider,
               busy: state.cloudSyncBusy,
               onSync: _syncNow,
-              onUpload: _downloadNow,
+              onUpload: _uploadNow,
             ),
           ],
         ),
@@ -12320,8 +12315,8 @@ class _ProviderSyncActions extends StatelessWidget {
           const SizedBox(height: 10),
           OutlinedButton.icon(
             onPressed: disabled ? null : onUpload,
-            icon: const Icon(Icons.cloud_download_rounded),
-            label: const Text('Download Data'),
+            icon: const Icon(Icons.cloud_upload_rounded),
+            label: const Text('Upload Data'),
           ),
         ],
       ),
